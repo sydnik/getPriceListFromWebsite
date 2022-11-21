@@ -7,6 +7,7 @@ import org.sydnik.by.framework.utils.Logger;
 public class Main {
     private static long time;
     public static void main(String[] args) throws  ClassNotFoundException {
+        //tttt
         time = System.currentTimeMillis();
         try {
             DriverUtil.getInstance();
