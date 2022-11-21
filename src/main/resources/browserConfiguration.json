@@ -1,0 +1,13 @@
+{
+  "windowWidth": 1500,
+  "windowHeight": 1050,
+  "waitSeconds": 4,
+  "timeoutMillis": 50,
+  "minTimeoutMillis": 1,
+  "browser_option_comment": "Chrome, FireFox",
+  "browser": "Chrome",
+  "language": "en",
+  "smoothScrollFireFox": false,
+  "smoothScrollChrome": "disable",
+  "pathForDownload": "src/main/filesForTest"
+}

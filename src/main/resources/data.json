@@ -1,0 +1,10 @@
+{
+  "formatPrice" : "#0.00",
+  "formatDate" : "dd.mm.yyyy",
+  "maxNumberOfError" : 10,
+  "groupForMiss": [
+    "Акции",
+    "Тематические подборки"
+  ],
+  "pathPharmaciesFile": "src/main/resources/pharmaciesNetwork.dat"
+}
