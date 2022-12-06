@@ -32,7 +32,7 @@ public class DriverUtil {
         return driverUtils;
     }
 
-    public static DriverUtil getInstance(){
+    public synchronized static DriverUtil getInstance(){
         if(driverUtils!=null) {
             if(driverUtils.webDriver!=null) {
                 return driverUtils;
@@ -112,11 +112,16 @@ public class DriverUtil {
 
     public static void scrollDownPage(){
         JavascriptExecutor js = ((JavascriptExecutor) DriverUtil.getWebDriver());
-        js.executeScript("window.scrollTo(0, document.body.scrollHeight)");
+        js.executeScript("window.scrollTo(0, document.body.scrollHeight - 500)");
     }
 
     public static void scrollUpPage(){
         JavascriptExecutor js = ((JavascriptExecutor) DriverUtil.getWebDriver());
         js.executeScript("window.scrollTo(0, 0)");
     }
+
+    public static void refresh(){
+        getWebDriver().navigate().refresh();
+    }
+
 }

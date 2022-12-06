@@ -4,6 +4,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.ElementClickInterceptedException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.sydnik.by.framework.utils.DriverUtil;
 import org.sydnik.by.framework.utils.Logger;
 import org.sydnik.by.framework.utils.WaitElement;
@@ -140,5 +141,16 @@ public abstract class BaseElement {
             Logger.error(this.getClass(),"Didn't click " + name + " after scroll "+"\n" + e.getMessage());
             throw e;
         }
+    }
+
+    public void moveToElement(){
+        new Actions(DriverUtil.getWebDriver()).moveToElement(findElement()).perform();
+        Logger.info(this.getClass(),name + "move cursor to element");
+    }
+
+    public String getClasses(){
+        String result = findElement().getAttribute("class");
+        Logger.info(this.getClass(),result + " got element classes");
+        return result;
     }
 }

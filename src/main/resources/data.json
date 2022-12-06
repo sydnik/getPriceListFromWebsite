@@ -1,10 +1,12 @@
 {
   "formatPrice" : "#0.00",
   "formatDate" : "dd.mm.yyyy",
-  "maxNumberOfError" : 10,
+  "maxNumberOfError" : 2,
   "groupForMiss": [
     "Акции",
     "Тематические подборки"
   ],
+  "headsForExcel": ["id", "name", "price", "country", "subdirectory", "directory", "addedDate"],
+  "columnsWidth": ["2500", "13000", "4000", "4000", "5000", "5000", "3000"],
   "pathPharmaciesFile": "src/main/resources/pharmaciesNetwork.dat"
 }

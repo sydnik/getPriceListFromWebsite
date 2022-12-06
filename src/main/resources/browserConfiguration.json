@@ -1,7 +1,7 @@
 {
   "windowWidth": 1500,
   "windowHeight": 1050,
-  "waitSeconds": 4,
+  "waitSeconds": 5,
   "timeoutMillis": 50,
   "minTimeoutMillis": 1,
   "browser_option_comment": "Chrome, FireFox",
