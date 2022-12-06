@@ -9,6 +9,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ExcelUtil {
 
@@ -71,7 +73,7 @@ public class ExcelUtil {
         return cell;
     }
 
-    public static Row addHeadOnTheTop(Workbook workbook, Sheet sheet, String ... strings){
+    public static Row addHeadOnTheTop(Workbook workbook, Sheet sheet, List<String> strings){
         CellStyle style = workbook.createCellStyle();
         style.setAlignment(HorizontalAlignment.CENTER);
         style.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -83,12 +85,22 @@ public class ExcelUtil {
         style.setBorderTop(BorderStyle.MEDIUM);
         style.setBorderRight(BorderStyle.MEDIUM);
         Row row = sheet.createRow(0);
-        for (int i = 0; i < strings.length; i++) {
+        for (int i = 0; i < strings.size(); i++) {
             Cell cell = row.createCell(i);
             cell.setCellStyle(style);
-            cell.setCellValue(strings[i]);
+            cell.setCellValue(strings.get(i));
         }
         return row;
+    }
+
+    public static void setColumnsWidth(Sheet sheet, ArrayList<String> columnsWidth){
+        for (int i = 0; i < columnsWidth.size(); i++) {
+            sheet.setColumnWidth(i, Integer.parseInt(columnsWidth.get(i)));
+        }
+    }
+
+    public static void setColumnWidth(Sheet sheet, int column, int width){
+            sheet.setColumnWidth(column, width);
     }
 
 //    public static Row setCellDate()
