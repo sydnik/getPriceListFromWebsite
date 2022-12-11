@@ -122,6 +122,7 @@ public class DriverUtil {
 
     public static void refresh(){
         getWebDriver().navigate().refresh();
+        Logger.info(DriverUtil.class, "refresh page");
     }
 
 }

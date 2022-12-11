@@ -37,7 +37,7 @@ public class ProductsPage extends BaseForm {
                 "Page with products");
     }
 
-    public Product getProduct(int position, String directory){
+    public Product getProduct(int position, String directory, boolean food){
         Logger.info(this.getClass(), "Start to find product №" + position + mainXpath + idXpath);
         String posString = String.valueOf(position);
         String href = new Label(By.xpath(mainXpath.replace("NUM", posString)  + idXpath),"product id label").getAttribute("href");
@@ -48,45 +48,43 @@ public class ProductsPage extends BaseForm {
         String country = selectedCountryLbl.getText();
         String subdirectory = subdirectoryLbl.getText();
 
-        return new Product(id, name, price, country, subdirectory, directory);
+        return new Product(id, name, price, country, subdirectory, directory, food);
     }
 
-    public List<Product> getAllProducts(String directory){
+    public List<Product> getAllProducts(String directory, boolean food){
         List<Product> list = new ArrayList<>();
-        if(plus18ageAgreeBtn.exist()){
-            plus18ageAgreeBtn.click();
-        }
+        check18PlusAndClose();
         for (int j = 1; j <= getCountryCount(); j++) {
             selectCountry(j);
-            list.addAll(getOneCountryProducts(directory));
+            list.addAll(getOneCountryProducts(directory, food));
             clearFilter();
         }
         return list;
     }
 
-    public List<Product> getOneCountryProducts(String directory){
+    public List<Product> getOneCountryProducts(String directory, boolean food){
         List<Product> list = new ArrayList<>();
-        int countProduct;
-        try {
-            countProduct = Integer.parseInt(productsCountLbl.getText().replaceAll("[^0-9]", ""));
-            Logger.info(this.getClass(), countProduct + " found products");
-        } catch (TimeoutException e){
-            return list;
-        }
+        int productCount;
         int i = 1;
         int fail = 0;
-        DriverUtil.scrollDownPage();
+        try {
+            productCount = Integer.parseInt(productsCountLbl.getText().replaceAll("[^0-9]", ""));
+            Logger.info(this.getClass(), productCount + " found products");
+        } catch (TimeoutException e){
+            Logger.error(this.getClass(), e.getMessage());
+            return list;
+        }
         while (true) {
             try {
-                list.add(getProduct(i, directory));
+                list.add(getProduct(i, directory, food));
                 i++;
                 fail=0;
             } catch (Exception e){
-                Logger.error(this.getClass(), "");
+                Logger.error(this.getClass(), e.getMessage());
                 fail++;
                 if(nextPageBtn.isVisibility()){
                     nextPageBtn.click();
-                    countProduct = countProduct - i;
+                    productCount = productCount - i;
                     i = 1;
                 }else if (new Button(By.xpath(mainXpath.replace("NUM", String.valueOf(i-1))), "number product "+ (i-1) + " button").exist()) {
                     new Button(By.xpath(mainXpath.replace("NUM", String.valueOf(i-1))), "number product "+ (i-1) + " button").scrollToElement();
@@ -94,12 +92,13 @@ public class ProductsPage extends BaseForm {
                 else
                 {
                     Logger.error(this.getClass(),"fail:" + fail +" pos:" + i);
-                    if(countProduct <= i || fail > JsonUtil.getDataInt("maxNumberOfError")){
+                    if(productCount <= i || fail > JsonUtil.getDataInt("maxNumberOfError")){
                         try {
                             Logger.error(this.getClass(), "countryFilter: " + countryFilter + " countryCount:" + countryCount +
-                                    " countProduct:" + countProduct + " i:" + i + " list.size:" + list.size() +
+                                    " countProduct:" + productCount + " i:" + i + " list.size:" + list.size() +
                                     " last product:" + list.get(list.size() - 1).toString());
                         }catch (Exception a){
+                            Logger.error(this.getClass(), e.getMessage());
                             Logger.error(this.getClass(), "Didn't write error log im method getOneCountryProducts");
                         }
                         break;
@@ -107,7 +106,7 @@ public class ProductsPage extends BaseForm {
                     continue;
                 }
             }
-            if(countProduct <= i || fail > JsonUtil.getDataInt("maxNumberOfError")){
+            if(productCount <= i || fail > JsonUtil.getDataInt("maxNumberOfError")){
                 break;
             }
 
@@ -139,6 +138,12 @@ public class ProductsPage extends BaseForm {
         int count = DriverUtil.getElementsCount(countryCount);
         Logger.info(this.getClass(), count + "- counties count");
         return  DriverUtil.getElementsCount(countryCount);
+    }
+
+    public void check18PlusAndClose(){
+        if(plus18ageAgreeBtn.exist()){
+            plus18ageAgreeBtn.click();
+        }
     }
 
 }

@@ -89,7 +89,19 @@ public class WaitElement {
         return getInstance().wait.until(a -> file.exists());
     }
 
-    public static void waitScript() {
+    public static boolean waitNotAttribute(By locator,String attribute, String value) {
+        for (int i = 0; i < 50; i++) {
+            if(getInstance().wait.until(ExpectedConditions.attributeContains(locator, attribute, value))){
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                continue;
+            }
+            else return true;
+        }
+        return false;
     }
 
 }

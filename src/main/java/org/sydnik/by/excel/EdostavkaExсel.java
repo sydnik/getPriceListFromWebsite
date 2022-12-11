@@ -5,13 +5,12 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.sydnik.by.framework.utils.ExcelUtil;
 import org.sydnik.by.framework.utils.JsonUtil;
+import org.sydnik.by.framework.utils.Logger;
 import org.sydnik.by.sites.e_dostavka.data.Product;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class EdostavkaExсel extends Thread {
@@ -40,13 +39,14 @@ public class EdostavkaExсel extends Thread {
 
     public void addRowWithValue(Product product, int numberOfRow){
         Row row = ExcelUtil.createRow(sheet, numberOfRow);
-        ExcelUtil.setCellInteger(row,0, product.getId());
+        ExcelUtil.setCellInteger(row,0, product.getItemCode());
         ExcelUtil.setCellValue(row,1, product.getName());
-        ExcelUtil.setCellDouble(workbook, row,2, product.getPrice(), JsonUtil.getDataString("formatPrice"));
+        ExcelUtil.setCellDouble(workbook, row,2, product.getPrice(), JsonUtil.getDataString("priceFormat"));
         ExcelUtil.setCellValue(row,3, product.getCountry());
         ExcelUtil.setCellValue(row,4, product.getSubdirectory());
         ExcelUtil.setCellValue(row,5, product.getDirectory());
-        ExcelUtil.setCellDate(workbook, row, 6, product.getDate(), JsonUtil.getDataString("formatDate"));
+        ExcelUtil.setCellDate(workbook, row, 6, product.getDate(), JsonUtil.getDataString("dateFormat"));
+        ExcelUtil.setCellValue(row, 7, String.valueOf(product.isFood()));
     }
 
     @Override
@@ -54,26 +54,28 @@ public class EdostavkaExсel extends Thread {
         try {
             ExcelUtil.addHeadOnTheTop(workbook, sheet, JsonUtil.getDataList("headsForExcel"));
             int rows = 1;
-            while (work) {
+            while (work || !queue.isEmpty()) {
                 if (queue.isEmpty()) {
                     try {
                         Thread.sleep(1000);
+                        System.out.println("Я решил поспать");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 } else {
                     try {
+                        System.out.println("Я работаю с очередью");
                         Product product = queue.take();
                         addRowWithValue(product, rows);
                         rows++;
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        Logger.error(this.getClass(), e.getMessage());
                     }
                 }
             }
         } finally {
             ExcelUtil.setColumnsWidth(sheet, (ArrayList<String>) JsonUtil.getDataList("columnsWidth"));
-            ExcelUtil.saveWorkBook( LocalDate.now().toString() + ".xlsx", workbook);
+            ExcelUtil.saveWorkBook( LocalDate.now() + "edostavka" + ".xlsx", workbook);
         }
     }
 

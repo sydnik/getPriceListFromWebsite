@@ -1,12 +1,10 @@
 {
-  "formatPrice" : "#0.00",
-  "formatDate" : "dd.mm.yyyy",
+  "priceFormat": "#0.00",
+  "dateFormat": "dd.MM.yyyy",
   "maxNumberOfError" : 2,
-  "groupForMiss": [
-    "Акции",
-    "Тематические подборки"
-  ],
-  "headsForExcel": ["id", "name", "price", "country", "subdirectory", "directory", "addedDate"],
-  "columnsWidth": ["2500", "13000", "4000", "4000", "5000", "5000", "3000"],
+  "foodTrue" : ["Продукты" ],
+  "groupForMiss": ["Акции", "Тематические подборки"],
+  "headsForExcel": ["id", "name", "price", "country", "subdirectory", "directory", "addedDate", "food"],
+  "columnsWidth": ["2500", "13000", "4000", "4000", "5000", "5000", "3000", "1000"],
   "pathPharmaciesFile": "src/main/resources/pharmaciesNetwork.dat"
 }

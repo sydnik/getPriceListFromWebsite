@@ -36,6 +36,7 @@ public class BrowserFactory {
                 JsonUtil.getConfString("windowHeight"));
         options.addArguments("--" + JsonUtil.getConfString("smoothScrollChrome")+"-smooth-scrolling");
         options.addArguments("--lang=" + JsonUtil.getConfString("language"));
+        options.addArguments("--blink-settings=imagesEnabled=false");
         options.setCapability("gsg:customcap", true);
         options.setCapability("networkname:applicationName", "node_");
         options.setCapability("nodename:applicationName", "app_2");

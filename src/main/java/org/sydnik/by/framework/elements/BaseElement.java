@@ -18,6 +18,10 @@ public abstract class BaseElement {
         this.locator = locator;
     }
 
+    public By getLocator() {
+        return locator;
+    }
+
     public boolean isInVisibility(){
         try {
             boolean result = WaitElement.waitInVisibility(locator);
