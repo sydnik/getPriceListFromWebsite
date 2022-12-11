@@ -1,4 +1,4 @@
-package org.sydnik.by.sites.e_dostavka.forms;
+package org.sydnik.by.sites.e_dostavka.site.forms;
 
 import org.openqa.selenium.By;
 import org.sydnik.by.framework.BaseForm;

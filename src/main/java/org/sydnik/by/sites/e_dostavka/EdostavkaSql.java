@@ -1,4 +1,4 @@
-package org.sydnik.by.sql.edostavka;
+package org.sydnik.by.sites.e_dostavka;
 
 import org.sydnik.by.enums.SqlQueries;
 import org.sydnik.by.framework.utils.JsonUtil;

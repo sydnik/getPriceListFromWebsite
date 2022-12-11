@@ -1,8 +1,7 @@
-package org.sydnik.by.sites.e_dostavka.pages;
+package org.sydnik.by.sites.e_dostavka.site.pages;
 
 import org.openqa.selenium.By;
 import org.sydnik.by.framework.BaseForm;
-import org.sydnik.by.framework.elements.BaseElement;
 import org.sydnik.by.framework.elements.Button;
 import org.sydnik.by.framework.elements.Label;
 

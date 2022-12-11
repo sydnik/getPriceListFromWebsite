@@ -1,4 +1,4 @@
-package org.sydnik.by.sites.e_dostavka.pages;
+package org.sydnik.by.sites.e_dostavka.site.pages;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;

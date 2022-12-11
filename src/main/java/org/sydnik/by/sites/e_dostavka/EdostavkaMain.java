@@ -4,17 +4,17 @@ import org.sydnik.by.framework.utils.DriverUtil;
 import org.sydnik.by.framework.utils.JsonUtil;
 import org.sydnik.by.framework.utils.Logger;
 import org.sydnik.by.sites.e_dostavka.data.Product;
-import org.sydnik.by.sites.e_dostavka.forms.CatalogForm;
-import org.sydnik.by.sites.e_dostavka.pages.MainPage;
-import org.sydnik.by.sites.e_dostavka.pages.ProductsPage;
+import org.sydnik.by.sites.e_dostavka.site.forms.CatalogForm;
+import org.sydnik.by.sites.e_dostavka.site.pages.MainPage;
+import org.sydnik.by.sites.e_dostavka.site.pages.ProductsPage;
 
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class EDostavka extends Thread {
+public class EdostavkaMain extends Thread {
     ArrayBlockingQueue<Product> queue;
 
-    public EDostavka(ArrayBlockingQueue<Product> queue) {
+    public EdostavkaMain(ArrayBlockingQueue<Product> queue) {
         this.queue = queue;
     }
 
