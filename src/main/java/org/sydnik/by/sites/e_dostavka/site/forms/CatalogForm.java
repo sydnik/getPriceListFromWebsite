@@ -8,14 +8,15 @@ import org.sydnik.by.framework.utils.Logger;
 import org.sydnik.by.framework.utils.WaitElement;
 
 public class CatalogForm extends BaseForm {
-    private Button catalogOpenedBtn = new Button(By.xpath("//*[contains(@class,'navigation_wrapper_opened')]"),"Catalog Button");
-    private Button catalogButton = new Button(By.xpath("//button[contains(@class,'catalog_button')]"),"Catalog Button");
+    private final Button catalogOpenedBtn = new Button(By.xpath("//*[contains(@class,'navigation_wrapper_opened')]"),"Catalog Button");
+    private final Button catalogBtn = new Button(By.xpath("//button[contains(@class,'catalog_button')]"),"Catalog Button");
+    private final Button menuItemOpenedBtn = new Button(By.xpath("//li[contains(@class,'navigation_categories__item_expanded')]/span/i"), "menuItem Opened Button");
 
-    private By directoryCount = By.xpath("//*[contains(@class,'navigation_categories__item_children')]");
-    private By menuItemCount = By.xpath("//*[@id='navigation_left']/li[@role='menuitem']");
-    private By subdirectory = By.xpath("//*[contains(@class,'desktop_subcategory__title')]");
+    private final By directoryCount = By.xpath("//*[contains(@class,'navigation_categories__item_children')]");
+    private final By menuItemCount = By.xpath("//*[@id='navigation_left']/li[@role='menuitem']");
+    private final By subdirectory = By.xpath("//*[contains(@class,'desktop_subcategory__title')]");
 
-    private String openedMenuItem = "navigation_categories__item_expanded";
+    private final String openedMenuItem = "navigation_categories__item_expanded";
     private String numberMenuItem = "//*[@role='menuitem'][NUMBER]/span";
     private String numberMenuItemForOpen = "//*[@role='menuitem'][NUMBER]";
     private String nameMenuItem = "//*[@role='menuitem']//*[text()='NAME']/..";
@@ -31,10 +32,10 @@ public class CatalogForm extends BaseForm {
     public void open(){
         if (!catalogOpenedBtn.exist()){
             try {
-                catalogButton.click();
+                catalogBtn.click();
             } catch (Exception e){
                 DriverUtil.refresh();
-                catalogButton.click();
+                catalogBtn.click();
                 Logger.error(this.getClass(), e.getMessage());
             }
 
@@ -73,6 +74,12 @@ public class CatalogForm extends BaseForm {
     public void clickSubdirectory(String name){
         Button button = new Button(By.xpath(nameSubdirectory.replace("NAME", name)), name + " subdirectory btn");
         button.click();
+    }
+
+    public void closeMenuItem(){
+        if(menuItemOpenedBtn.exist()){
+            menuItemOpenedBtn.click();
+        }
     }
 
     public int getDirectoryCount(){

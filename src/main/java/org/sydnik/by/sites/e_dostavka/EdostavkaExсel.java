@@ -1,94 +1,108 @@
 package org.sydnik.by.sites.e_dostavka;
 
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.sydnik.by.IStopThread;
 import org.sydnik.by.framework.utils.ExcelUtil;
 import org.sydnik.by.framework.utils.JsonUtil;
-import org.sydnik.by.framework.utils.Logger;
 import org.sydnik.by.sites.e_dostavka.data.Product;
+import org.sydnik.by.sites.e_dostavka.enums.OperationMode;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 
-public class EdostavkaExсel extends Thread {
+public class EdostavkaExсel extends Thread implements IStopThread {
     private Workbook workbook;
     private Sheet sheet;
-    private ArrayBlockingQueue<Product> queue;
     private boolean work = true;
+    private OperationMode operationMode;
+    private CellStyle dateCellStyle;
+    private CellStyle priceCellStyle;
 
-    public EdostavkaExсel(Workbook workbook, ArrayBlockingQueue<Product> queue) {
+    public EdostavkaExсel(Workbook workbook, OperationMode operationMode) {
         this.workbook = workbook;
         this.sheet = workbook.createSheet();
-        this.queue = queue;
+        this.operationMode = operationMode;
+        this.dateCellStyle = ExcelUtil.getDateStyle(workbook, JsonUtil.getDataString("dateFormat"));
+        this.priceCellStyle = ExcelUtil.getPriceStyle(workbook, JsonUtil.getDataString("priceFormat"));
     }
 
-    public EdostavkaExсel(Workbook workbook, Sheet sheet, ArrayBlockingQueue<Product> queue) {
+    public EdostavkaExсel(Workbook workbook, Sheet sheet, OperationMode operationMode) {
         this.workbook = workbook;
-        this.sheet = workbook.createSheet();
-        this.queue = queue;
+        this.sheet = sheet;
+        this.operationMode = operationMode;
+        this.dateCellStyle = ExcelUtil.getDateStyle(workbook, JsonUtil.getDataString("dateFormat"));
+        this.priceCellStyle = ExcelUtil.getPriceStyle(workbook, JsonUtil.getDataString("priceFormat"));
     }
 
-    public void addRowsWithProduct(List<Product> list){
-        for (int i = 0; i < list.size(); i++) {
-            addRowWithValue(list.get(i), i+1);
-        }
-    }
-
-    public void addRowWithValue(Product product, int numberOfRow){
-        Row row = ExcelUtil.createRow(sheet, numberOfRow);
-        ExcelUtil.setCellInteger(row,0, product.getItemCode());
-        ExcelUtil.setCellValue(row,1, product.getName());
-        ExcelUtil.setCellDouble(workbook, row,2, product.getPrice(), JsonUtil.getDataString("priceFormat"));
-        ExcelUtil.setCellValue(row,3, product.getCountry());
-        ExcelUtil.setCellValue(row,4, product.getSubdirectory());
-        ExcelUtil.setCellValue(row,5, product.getDirectory());
-        ExcelUtil.setCellDate(workbook, row, 6, product.getDate(), JsonUtil.getDataString("dateFormat"));
-        ExcelUtil.setCellValue(row, 7, String.valueOf(product.isFood()));
-    }
 
     @Override
     public void run() {
         try {
-            ExcelUtil.addHeadOnTheTop(workbook, sheet, JsonUtil.getDataList("headsForExcel"));
-            int rows = 1;
-            while (work || !queue.isEmpty()) {
-                if (queue.isEmpty()) {
+            addHeads();
+            int row = 1;
+            while (work || !QueueUtil.isEmpty()) {
+                if (QueueUtil.isEmpty()) {
                     try {
                         Thread.sleep(1000);
-                        System.out.println("Я решил поспать");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 } else {
-                    try {
-                        System.out.println("Я работаю с очередью");
-                        Product product = queue.take();
-                        addRowWithValue(product, rows);
-                        rows++;
-                    } catch (InterruptedException e) {
-                        Logger.error(this.getClass(), e.getMessage());
-                    }
+                    Product product = QueueUtil.take();
+                    addRowWithValue(product, row);
+                    row++;
                 }
             }
         } finally {
-            ExcelUtil.setColumnsWidth(sheet, (ArrayList<String>) JsonUtil.getDataList("columnsWidth"));
-            ExcelUtil.saveWorkBook( LocalDate.now() + "edostavka" + ".xlsx", workbook);
+            setColumnWidth();
+            ExcelUtil.saveWorkBook(LocalDate.now() + "edostavka" + ".xlsx", workbook);
         }
     }
 
-    public void setColumnWidth(){
-        ExcelUtil.setColumnsWidth(sheet, (ArrayList<String>) JsonUtil.getDataList("columnsWidth"));
+    public void setColumnWidth() {
+        if (operationMode == OperationMode.SITE_TO_EXCEL) {
+            ExcelUtil.setColumnsWidth(sheet, (ArrayList<String>) JsonUtil.getDataList("columnsWidthFromSite"));
+        } else if (operationMode == OperationMode.SQL_TO_EXCEL) {
+            ExcelUtil.setColumnsWidth(sheet, (ArrayList<String>) JsonUtil.getDataList("columnsWidthFromSql"));
+        }
     }
 
-    public void addHeads(){
-        ExcelUtil.addHeadOnTheTop(workbook, sheet, JsonUtil.getDataList("headsForExcel"));
+    public void addRowsWithProduct(List<Product> list) {
+        for (int i = 0; i < list.size(); i++) {
+            addRowWithValue(list.get(i), i + 1);
+        }
     }
 
-    public void setWork(boolean work){
-        this.work = work;
+    public void addRowWithValue(Product product, int numberOfRow) {
+        int column = 0;
+        Row row = ExcelUtil.createRow(sheet, numberOfRow);
+        if (operationMode == OperationMode.SQL_TO_EXCEL) {
+            ExcelUtil.setCellInteger(row, column++, product.getId());
+        }
+        ExcelUtil.setCellInteger(row, column++, product.getItemCode());
+        ExcelUtil.setCellValue(row, column++, product.getName());
+        ExcelUtil.setCellDouble(row, column++, product.getPrice(), priceCellStyle);
+        ExcelUtil.setCellValue(row, column++, product.getCountry());
+        ExcelUtil.setCellValue(row, column++, product.getSubdirectory());
+        ExcelUtil.setCellValue(row, column++, product.getDirectory());
+        ExcelUtil.setCellDate(row, column++, product.getDate(), dateCellStyle);
+        ExcelUtil.setCellValue(row, column++, String.valueOf(product.isFood()));
     }
 
+    public void addHeads() {
+        if (operationMode == OperationMode.SITE_TO_EXCEL) {
+            ExcelUtil.addHeadOnTheTop(workbook, sheet, JsonUtil.getDataList("headsForExcelFromSite"));
+        } else if (operationMode == OperationMode.SQL_TO_EXCEL) {
+            ExcelUtil.addHeadOnTheTop(workbook, sheet, JsonUtil.getDataList("headsForExcelFromSql"));
+        }
+    }
+
+    @Override
+    public void stopThead() {
+        work = false;
+    }
 }

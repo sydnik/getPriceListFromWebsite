@@ -7,7 +7,7 @@ import org.sydnik.by.framework.elements.Label;
 import org.sydnik.by.framework.utils.DriverUtil;
 
 public class SubdirectoryForm extends BaseForm {
-    private String itemsXpath = "//ul[@class='catalog_submenu']/li[contains(@class,'catalog_menu-item')]";
+    private final String itemsXpath = "//ul[@class='catalog_submenu']/li[contains(@class,'catalog_menu-item')]";
     public SubdirectoryForm() {
         super(new Label(By.className("catalog_submenu"), "submenu label" ), "Subdirectory Form");
     }

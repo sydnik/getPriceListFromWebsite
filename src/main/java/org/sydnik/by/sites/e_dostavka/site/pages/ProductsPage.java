@@ -14,17 +14,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductsPage extends BaseForm {
-    private Label subdirectoryLbl = new Label(By.xpath("//*[contains(@class,'category_heading')]"), "productGroup label");
-    private Label productsCountLbl = new Label(By.xpath("//*[contains(@class,'category_product__count')]"), "products count label");
-    private Label selectedCountryLbl = new Label(By.xpath("//*[contains(@class,'filter_country')]//*[contains(@class,'checkbox__label_checked')]"), "product country label");
-    private Label filterLbl = new Label(By.xpath("//*[contains(@class,'filters_filters')]"), "filter label");
-    private Button nextPageBtn = new Button(By.xpath("//*[contains(@class,'pagination_next')]"), "next page button");
-    private Button showMoreProductBtn = new Button(By.id("//a[contains(@class,'show_more')]"), "show more product button");
-    private Button clearFilterBtn = new Button(By.xpath("//*[contains(@class,'filters_clear__text')]"), "clear filter button");
-    private Button showAllCountryBtn = new Button(By.xpath("//*[contains(@class,'filter_country')]//*[contains(@class,'checkboxes_button')]"), "show all country button");
-    private Button plus18ageAgreeBtn = new Button(By.xpath("//*[contains(@class,'confirm-without-close_modal')]//button[contains(@class,'button_type_primary')]"), " 18 + age agree button");
+    private final Label subdirectoryLbl = new Label(By.xpath("//*[contains(@class,'category_heading')]"), "productGroup label");
+    private final Label productsCountLbl = new Label(By.xpath("//*[contains(@class,'category_product__count')]"), "products count label");
+    private final Label selectedCountryLbl = new Label(By.xpath("//*[contains(@class,'filter_country')]//*[contains(@class,'checkbox__label_checked')]"), "product country label");
+    private final Label filterLbl = new Label(By.xpath("//*[contains(@class,'filters_filters')]"), "filter label");
+    private final Button nextPageBtn = new Button(By.xpath("//*[contains(@class,'pagination_next')]"), "next page button");
+    private final Button showMoreProductBtn = new Button(By.id("//a[contains(@class,'show_more')]"), "show more product button");
+    private final Button clearFilterBtn = new Button(By.xpath("//*[contains(@class,'filters_clear__text')]"), "clear filter button");
+    private final Button showAllCountryBtn = new Button(By.xpath("//*[contains(@class,'filter_country')]//*[contains(@class,'checkboxes_button')]"), "show all country button");
+    private final Button plus18ageAgreeBtn = new Button(By.xpath("//*[contains(@class,'confirm-without-close_modal')]//button[contains(@class,'button_type_primary')]"), " 18 + age agree button");
 
-    private By countryCount = By.xpath("//*[contains(@class,'filter_country')]//*[contains(@class,'checkbox__label')]");
+    private final By countryCount = By.xpath("//*[contains(@class,'filter_country')]//*[contains(@class,'checkbox__label')]");
 
     private String mainXpath = "//div[contains(@class,'products_product')][NUM]/div[contains(@class,'products_product_vertical')]";
     private String idXpath = "//a";
@@ -106,7 +106,7 @@ public class ProductsPage extends BaseForm {
                     continue;
                 }
             }
-            if(productCount <= i || fail > JsonUtil.getDataInt("maxNumberOfError")){
+            if(productCount < i || fail > JsonUtil.getDataInt("maxNumberOfError")){
                 break;
             }
 

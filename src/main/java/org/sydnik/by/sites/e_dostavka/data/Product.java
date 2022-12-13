@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 public class Product {
+    private int id;
     private int itemCode;
     private double price;
     private String name;
@@ -12,6 +13,7 @@ public class Product {
     private String directory;
     private LocalDate date;
     private boolean food;
+    //Скорее всего нужно через мап сделать цены и даты
 
     public Product(int itemCode, String name, double price, String country, String subdirectory, String directory, boolean food) {
         this.itemCode = itemCode;
@@ -24,7 +26,8 @@ public class Product {
         this.food = food;
     }
 
-    public Product(int itemCode, String name, double price, String country, String subdirectory, String directory, LocalDate date, boolean food) {
+    public Product(int id, int itemCode, String name, double price, String country, String subdirectory, String directory, LocalDate date, boolean food) {
+        this.id = id;
         this.itemCode = itemCode;
         this.price = price;
         this.name = name;
@@ -33,6 +36,10 @@ public class Product {
         this.directory = directory;
         this.date = date;
         this.food = food;
+    }
+
+    public int getId(){
+        return id;
     }
 
     public int getItemCode() {
@@ -83,7 +90,8 @@ public class Product {
     @Override
     public String toString() {
         return "Product{" +
-                "id=" + itemCode +
+                "id=" + id +
+                "itemCode=" + itemCode +
                 ", price=" + price +
                 ", name='" + name + '\'' +
                 ", country='" + country + '\'' +

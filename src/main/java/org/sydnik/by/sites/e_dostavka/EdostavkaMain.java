@@ -1,93 +1,106 @@
 package org.sydnik.by.sites.e_dostavka;
 
-import org.sydnik.by.framework.utils.DriverUtil;
-import org.sydnik.by.framework.utils.JsonUtil;
-import org.sydnik.by.framework.utils.Logger;
-import org.sydnik.by.sites.e_dostavka.data.Product;
-import org.sydnik.by.sites.e_dostavka.site.forms.CatalogForm;
-import org.sydnik.by.sites.e_dostavka.site.pages.MainPage;
-import org.sydnik.by.sites.e_dostavka.site.pages.ProductsPage;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.sydnik.by.ConsoleBeta;
+import org.sydnik.by.IStopThread;
+import org.sydnik.by.framework.utils.SQLUtil;
+import org.sydnik.by.sites.e_dostavka.enums.OperationMode;
 
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
+public class EdostavkaMain extends Thread implements IStopThread {
+    private OperationMode operationMode;
+    private boolean work;
 
-public class EdostavkaMain extends Thread {
-    ArrayBlockingQueue<Product> queue;
 
-    public EdostavkaMain(ArrayBlockingQueue<Product> queue) {
-        this.queue = queue;
+    public EdostavkaMain(OperationMode operationMode) {
+        this.operationMode = operationMode;
+        work = true;
     }
 
     public void run(){
-        long time = System.currentTimeMillis();
+        switch (operationMode){
+            case SITE_TO_SQL: {
+                getPricesFromSiteToSql();
+                break;
+            }
+            case SITE_TO_EXCEL: {
+                getPricesFromSiteToExcel();
+                break;
+            }
+            case SQL_TO_EXCEL: {
+                getPricesFromSqlToExcel();
+                break;
+            }
+        }
+    }
+
+    private void getPricesFromSqlToExcel(){
         try {
-            DriverUtil.getInstance();
-            MainPage mainPage = new MainPage();
-            DriverUtil.openURL("https://edostavka.by/");
-            mainPage.closeAddress();
-            mainPage.closeCookies();
-            getPricesFromMenuItems();
-        }
-        finally {
-            Logger.info(this.getClass(),"App ran for " + (System.currentTimeMillis()-time) + " ms");
-            Logger.info(this.getClass(), DriverUtil.getCurrentUrl());
-            DriverUtil.close();
-        }
-    }
-
-    public void getPricesFromMenuItems(){
-        CatalogForm catalogForm = new CatalogForm();
-        catalogForm.open();
-        int countItem = catalogForm.getMenuItemCount();
-        for (int i = 1; i <= countItem; i++) {
-            Logger.info(this.getClass(), "Item: " + catalogForm.getMenuItemName(i));
-            getPricesFromDirectories(i);
+            Workbook workbook = new XSSFWorkbook();
+            EdostavkaSql edostavkaSql = new EdostavkaSql(operationMode);
+            EdostavkaExсel edostavkaExсel = new EdostavkaExсel(workbook, operationMode);
+            edostavkaSql.start();
+            edostavkaExсel.start();
+            ConsoleBeta.addThread(edostavkaExсel, edostavkaSql);
+            edostavkaSql.join();
+            while (work) {
+                if (QueueUtil.isEmpty() ) {
+                    ConsoleBeta.getInstance().stopThead();
+                    break;
+                }else {
+                    Thread.sleep(10000);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 
-    public void getPricesFromDirectories(int numberOfMenuItem){
-        CatalogForm catalogForm = new CatalogForm();
-        catalogForm.open();
-        catalogForm.openMenuItem(numberOfMenuItem);
-        int countDirectory = catalogForm.getDirectoryCount();
-        for (int i = 1; i <= countDirectory; i++) {
-            Logger.info(this.getClass(), "Directory: " + catalogForm.getDirectoryName(i));
-            getPricesFromSubcategories(numberOfMenuItem, i);
+    private void getPricesFromSiteToSql(){
+        try {
+            EdostavkaSql edostavkaSql = new EdostavkaSql(operationMode);
+            edostavkaSql.start();
+            EdostavkaSite edostavkaSite = new EdostavkaSite(4, 1 , 1);
+            edostavkaSite.start();
+            ConsoleBeta.addThread(edostavkaSql, edostavkaSite);
+            edostavkaSite.join();
+            while (work) {
+                if (QueueUtil.isEmpty() ) {
+                    ConsoleBeta.getInstance().stopThead();
+                    break;
+                }else {
+                    Thread.sleep(10000);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 
-    public void getPricesFromSubcategories(int numberOfMenuItem, int numberOfDirectory){
-        CatalogForm catalogForm = new CatalogForm();
-        ProductsPage page = new ProductsPage();
-        catalogForm.open();
-        boolean food = JsonUtil.getDataList("foodTrue").contains(catalogForm.getMenuItemName(numberOfMenuItem));
-        DriverUtil.refresh();
-        catalogForm.open();
-        catalogForm.openMenuItem(numberOfMenuItem);
-        catalogForm.openDirectory(numberOfDirectory);
-        int countSubdirectory = catalogForm.getSubdirectoryCount();
-        String directoryNow, subdirectoryNow;
-        for (int i = 1; i <= countSubdirectory; i++) {
-            DriverUtil.refresh();
-            catalogForm.open();
-            catalogForm.openMenuItem(numberOfMenuItem);
-            catalogForm.openDirectory(numberOfDirectory);
-            directoryNow = catalogForm.getDirectoryName(numberOfDirectory);
-            subdirectoryNow = catalogForm.getSubdirectoryName(countSubdirectory);
-            catalogForm.clickSubdirectory(i);
-            Logger.info(this.getClass(), "Directory: " + directoryNow + " Subdirectory: " + subdirectoryNow);
-            DriverUtil.scrollUpPage();
-            addProductsToQueue(page.getAllProducts(directoryNow, food));
+    private void getPricesFromSiteToExcel(){
+        try {
+            Workbook workbook = new XSSFWorkbook();
+            EdostavkaExсel edostavkaExсel = new EdostavkaExсel(workbook, operationMode);
+            edostavkaExсel.start();
+            EdostavkaSite edostavkaSite = new EdostavkaSite();
+            edostavkaSite.start();
+            ConsoleBeta.addThread(edostavkaExсel, edostavkaSite);
+            edostavkaSite.join();
+            while (work) {
+                if (QueueUtil.isEmpty() ) {
+                    ConsoleBeta.getInstance().stopThead();
+                    break;
+                }else {
+                    Thread.sleep(1000);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 
-    public void addProductsToQueue(List<Product> list){
-        queue.addAll(list);
-    }
-
-    public void interrupt(){
-        System.out.println(queue.size());
-        super.interrupt();
-        this.stop();
+    @Override
+    public void stopThead() {
+         work = false;
     }
 }

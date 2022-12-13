@@ -1,6 +1,8 @@
 package org.sydnik.by.sites.e_dostavka;
 
-import org.sydnik.by.enums.SqlQueries;
+import org.sydnik.by.IStopThread;
+import org.sydnik.by.sites.e_dostavka.enums.OperationMode;
+import org.sydnik.by.sites.e_dostavka.enums.SqlQueries;
 import org.sydnik.by.framework.utils.JsonUtil;
 import org.sydnik.by.framework.utils.Logger;
 import org.sydnik.by.framework.utils.SQLUtil;
@@ -10,51 +12,100 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.List;
 
-public class EdostavkaSql extends Thread {
-    private ArrayBlockingQueue<Product> queue;
+
+public class EdostavkaSql extends Thread implements IStopThread {
     private boolean work = true;
+    private OperationMode operationMode;
 
-    public EdostavkaSql(ArrayBlockingQueue<Product> queue) {
-        this.queue = queue;
+
+    public EdostavkaSql(OperationMode operationMode) {
+        this.operationMode = operationMode;
     }
 
-    public void run(){
+    public void run() {
+        switch (operationMode) {
+            case SITE_TO_SQL: {
+                savePricesFromSiteToSql();
+                break;
+            }
+            case SQL_TO_EXCEL: {
+                getPricesFromSqlToExcel();
+                break;
+            }
+            default: {
+                Logger.error(this.getClass(), "Dont work with operation mode:" + operationMode.name());
+                break;
+            }
+        }
+
+    }
+
+    public void getPricesFromSqlToExcel(){
+        LocalDate localDate = LocalDate.of(2022, 12, 10);
+        String stringDate = localDate.format(DateTimeFormatter.ofPattern(JsonUtil.getDataString("dateFormat")));
+        PreparedStatement preparedStatement = null;
         try {
-            while (work || !queue.isEmpty()) {
-                if (queue.isEmpty()) {
+            preparedStatement = SQLUtil.getConnection().prepareStatement(SqlQueries.PRODUCTS.getGet().replaceAll("PRICE_DATE", stringDate));
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()){
+                int id = resultSet.getInt(1);
+                int itemCode = resultSet.getInt(2);
+                String name = resultSet.getString(3);
+                String country = resultSet.getString(4);
+                String directory = resultSet.getString(5);
+                String subdirectory = resultSet.getString(6);
+                boolean food = resultSet.getBoolean(7);
+                double price = resultSet.getDouble(8);
+                QueueUtil.add(new Product(id, itemCode, name, price , country, subdirectory, directory, localDate, food));
+            }
+        } catch (SQLException e) {
+            Logger.info(this.getClass(), "SQL state:" + e.getSQLState() + e.getMessage() + " code: " + e.getErrorCode());
+        } finally {
+            SQLUtil.closePreparedStatement(preparedStatement);
+            SQLUtil.close();
+        }
+    }
+
+    private void savePricesFromSiteToSql(){
+        try {
+            while (work || !QueueUtil.isEmpty()) {
+                if (QueueUtil.isEmpty()) {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 } else {
-                    try {
-                        addProductAndPrice(queue.take());
-                    } catch (InterruptedException e) {
-                        Logger.error(this.getClass(), e.getMessage());
-                    }
+                    addProductAndPrice(QueueUtil.take());
                 }
             }
         } finally {
             SQLUtil.close();
         }
-
     }
-    public int addProduct(Product product){
+
+    public int addProduct(Product product) {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         try {
             preparedStatement = SQLUtil.getConnection().prepareStatement("INSERT INTO products (itemcode, name, country, subdirectory, directory, food) " +
                     "VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
-
-            preparedStatement.setInt( 1, product.getItemCode());
+            int idCountry = getIdFrom(SqlQueries.COUNTRY, product.getCountry());
+            int idSub = getIdFrom(SqlQueries.SUBDIRECTORY, product.getSubdirectory());
+            int idDir = getIdFrom(SqlQueries.DIRECTORY, product.getDirectory());
+            if (idCountry == -1 || idSub == -1 || idDir == -1) {
+                Logger.error(this.getClass(), " idCountry: " + idCountry + " idSub: " + idSub + " idDir: " + idDir);
+                throw new SQLException();
+            }
+            preparedStatement.setInt(1, product.getItemCode());
             preparedStatement.setString(2, product.getName());
-            preparedStatement.setInt(3, getIdFromSoloTable(SqlQueries.COUNTRY,product.getCountry()));
-            preparedStatement.setInt(4, getIdFromSoloTable(SqlQueries.SUBDIRECTORY,product.getSubdirectory()));
-            preparedStatement.setInt(5, getIdFromSoloTable(SqlQueries.DIRECTORY,product.getDirectory()));
+            preparedStatement.setInt(3, idCountry);
+            preparedStatement.setInt(4, idSub);
+            preparedStatement.setInt(5, idDir);
             preparedStatement.setBoolean(6, product.isFood());
             preparedStatement.executeUpdate();
             resultSet = preparedStatement.getGeneratedKeys();
@@ -70,12 +121,12 @@ public class EdostavkaSql extends Thread {
         return -1;
     }
 
-    public int addValueToSoloTable(SqlQueries sqlQueries, String value) {
+    public int addValueTo(SqlQueries sqlQueries, String value) {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         try {
             preparedStatement = SQLUtil.getConnection().prepareStatement(sqlQueries.getAdd(), Statement.RETURN_GENERATED_KEYS);
-            preparedStatement.setString( 1, value);
+            preparedStatement.setString(1, value);
             preparedStatement.executeUpdate();
             resultSet = preparedStatement.getGeneratedKeys();
             resultSet.next();
@@ -90,16 +141,16 @@ public class EdostavkaSql extends Thread {
         return -1;
     }
 
-    public int getIdFromSoloTable(SqlQueries sqlQueries, String value){
+    public int getIdFrom(SqlQueries sqlQueries, String value) {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         try {
             preparedStatement = SQLUtil.getConnection().prepareStatement(sqlQueries.getGet());
             preparedStatement.setString(1, value);
             resultSet = preparedStatement.executeQuery();
-        if (resultSet.next()){
-            return resultSet.getInt(1);
-        }
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
 
         } catch (SQLException e) {
             Logger.error(this.getClass(), value + " didnt get id from the sql base\n" +
@@ -108,10 +159,10 @@ public class EdostavkaSql extends Thread {
             SQLUtil.closePreparedStatement(preparedStatement);
             SQLUtil.closeResultSet(resultSet);
         }
-        return addValueToSoloTable(sqlQueries, value);
+        return addValueTo(sqlQueries, value);
     }
 
-    public int getProductId(Product product){
+    public int getProductId(Product product) {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         try {
@@ -119,7 +170,7 @@ public class EdostavkaSql extends Thread {
             preparedStatement.setString(1, product.getName());
             preparedStatement.setInt(2, product.getItemCode());
             resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()){
+            if (resultSet.next()) {
                 return resultSet.getInt(1);
             }
 
@@ -133,10 +184,13 @@ public class EdostavkaSql extends Thread {
         return -1;
     }
 
-    public void addPrice(int id, Product product){
+    public void addPrice(int id, Product product) {
         String stringDate = product.getDate().format(DateTimeFormatter.ofPattern(JsonUtil.getDataString("dateFormat")));
         PreparedStatement preparedStatement = null;
         try {
+            if (id == -1) {
+                throw new SQLException();
+            }
             preparedStatement = SQLUtil.getConnection().prepareStatement("INSERT prices SET `idProduct`= ?, `PRICE_DATE`= ? ON DUPLICATE KEY UPDATE `PRICE_DATE` = ?;"
                     .replaceAll("PRICE_DATE", stringDate));
             preparedStatement.setInt(1, id);
@@ -144,7 +198,7 @@ public class EdostavkaSql extends Thread {
             preparedStatement.setDouble(3, product.getPrice());
             preparedStatement.execute();
         } catch (SQLException e) {
-            if(e.getErrorCode()==1054){
+            if (e.getErrorCode() == 1054) {
                 addColumnInPrices(stringDate);
                 addProductAndPrice(product);
             }
@@ -154,15 +208,15 @@ public class EdostavkaSql extends Thread {
         }
     }
 
-    public void addProductAndPrice(Product product){
+    public void addProductAndPrice(Product product) {
         int id = getProductId(product);
-        if(id==-1){
+        if (id == -1) {
             id = addProduct(product);
         }
         addPrice(id, product);
     }
 
-    public void addColumnInPrices(String priceDate){
+    public void addColumnInPrices(String priceDate) {
         PreparedStatement preparedStatement = null;
         try {
             preparedStatement = SQLUtil.getConnection().prepareStatement("alter table prices add `PRICE_DATE` double null;"
@@ -170,14 +224,15 @@ public class EdostavkaSql extends Thread {
             preparedStatement.executeUpdate();
 
         } catch (SQLException e) {
-            Logger.error(this.getClass(),   " didnt get id from the sql base\n" +
+            Logger.error(this.getClass(), " didnt get id from the sql base\n" +
                     "SQL state:" + e.getSQLState() + e.getMessage() + " code: " + e.getErrorCode());
         } finally {
             SQLUtil.closePreparedStatement(preparedStatement);
         }
     }
 
-    public void setWork(boolean work) {
-        this.work = work;
+    @Override
+    public void stopThead() {
+        work = false;
     }
 }

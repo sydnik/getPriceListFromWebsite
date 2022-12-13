@@ -1,6 +1,5 @@
 package org.sydnik.by.framework.utils;
 
-import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -22,10 +21,9 @@ public class ExcelUtil {
     public static void saveWorkBook(String path, Workbook workbook){
         try (OutputStream fileOut = new FileOutputStream(path)) {
             workbook.write(fileOut);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            Logger.error(ExcelUtil.class, "didn't save excel: " + path + "\n" +
+                    e.getMessage());
         }
     }
 
@@ -53,22 +51,16 @@ public class ExcelUtil {
         return cell;
     }
 
-    public static Cell setCellDouble(Workbook workbook, Row row, int columnInt, double value, String format){
+    public static Cell setCellDouble(Row row, int columnInt, double value, CellStyle cellStyle){
         Cell cell = row.createCell(columnInt);
-        DataFormat dataFormat = workbook.createDataFormat();
-        CellStyle dateStyle = workbook.createCellStyle();
-        dateStyle.setDataFormat(dataFormat.getFormat(format));
-        cell.setCellStyle(dateStyle);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(value);
         return cell;
     }
 
-    public static Cell setCellDate (Workbook workbook, Row row, int columnInt, LocalDate value, String format){
+    public static Cell setCellDate (Row row, int columnInt, LocalDate value, CellStyle cellStyle){
         Cell cell = row.createCell(columnInt);
-        DataFormat dataFormat = workbook.createDataFormat();
-        CellStyle dateStyle = workbook.createCellStyle();
-        dateStyle.setDataFormat(dataFormat.getFormat(format));
-        cell.setCellStyle(dateStyle);
+        cell.setCellStyle(cellStyle);
         cell.setCellValue(value);
         return cell;
     }
@@ -101,6 +93,20 @@ public class ExcelUtil {
 
     public static void setColumnWidth(Sheet sheet, int column, int width){
             sheet.setColumnWidth(column, width);
+    }
+
+    public static CellStyle getDateStyle(Workbook workbook, String format){
+        DataFormat dataFormat = workbook.createDataFormat();
+        CellStyle dateStyle = workbook.createCellStyle();
+        dateStyle.setDataFormat(dataFormat.getFormat(format));
+        return dateStyle;
+    }
+
+    public static CellStyle getPriceStyle(Workbook workbook, String format){
+        DataFormat dataFormat = workbook.createDataFormat();
+        CellStyle cellStyle = workbook.createCellStyle();
+        cellStyle.setDataFormat(dataFormat.getFormat(format));
+        return cellStyle;
     }
 
 }

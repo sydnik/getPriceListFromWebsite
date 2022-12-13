@@ -3,8 +3,10 @@
   "dateFormat": "dd.MM.yyyy",
   "maxNumberOfError" : 2,
   "foodTrue" : ["Продукты" ],
-  "groupForMiss": ["Акции", "Тематические подборки"],
-  "headsForExcel": ["id", "name", "price", "country", "subdirectory", "directory", "addedDate", "food"],
-  "columnsWidth": ["2500", "13000", "4000", "4000", "5000", "5000", "3000", "1000"],
+  "DirectoriesForMiss": ["Карты лояльности, сувениры", "Уцененные товары"],
+  "headsForExcelFromSite": ["itemCode", "name", "price", "country", "subdirectory", "directory", "addedDate", "food"],
+  "columnsWidthFromSite": ["2500", "13000", "4000", "4000", "5000", "5000", "3000", "1000"],
+  "headsForExcelFromSql": ["id", "itemCode", "name", "price", "country", "subdirectory", "directory", "addedDate", "food"],
+  "columnsWidthFromSql": ["2000", "2500", "13000", "4000", "4000", "5000", "5000", "3000", "1000"],
   "pathPharmaciesFile": "src/main/resources/pharmaciesNetwork.dat"
 }

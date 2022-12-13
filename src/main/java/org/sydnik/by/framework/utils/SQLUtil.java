@@ -24,7 +24,7 @@ public class SQLUtil {
 
     public static SQLUtil getInstance(){
         if(sqlUtil == null){
-            return new SQLUtil();
+            sqlUtil =  new SQLUtil();
         }
         return sqlUtil;
     }
@@ -32,7 +32,7 @@ public class SQLUtil {
     public static void close(){
         SQLUtil sqlUtil = getInstance();
         try {
-            if (sqlUtil.connection != null && !sqlUtil.connection.isClosed()) {
+            if(sqlUtil.connection!=null) {
                 sqlUtil.connection.close();
             }
         } catch (SQLException e) {
@@ -43,8 +43,7 @@ public class SQLUtil {
     public static Connection getConnection() {
         SQLUtil sqlUtil = getInstance();
         try {
-            if(sqlUtil.connection==null || sqlUtil.connection.isClosed()){
-
+            if(sqlUtil.connection == null || sqlUtil.connection.isClosed()){
                 sqlUtil.connection = DriverManager.getConnection(sqlUtil.URL, sqlUtil.USERNAME, sqlUtil.PASSWORD);
                 return sqlUtil.connection;
             }
@@ -58,16 +57,16 @@ public class SQLUtil {
     public static void closePreparedStatement(PreparedStatement pr){
         try {
             pr.close();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     public static void closeResultSet(ResultSet resultSet){
         try {
             resultSet.close();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
